@@ -2,7 +2,6 @@ class SimilarArtistsController < ApplicationController
   # GET /similar_artists
   # GET /similar_artists.json
   def index
-binding.pry
     @similar_artists = SimilarArtist.all
 
     respond_to do |format|
@@ -58,7 +57,6 @@ binding.pry
   # PUT /similar_artists/1
   # PUT /similar_artists/1.json
   def update
-binding.pry
     @similar_artist = SimilarArtist.find(params[:id])
 
     respond_to do |format|

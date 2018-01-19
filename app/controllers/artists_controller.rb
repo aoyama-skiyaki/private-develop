@@ -94,11 +94,10 @@ class ArtistsController < ApplicationController
 
     #ノードを作成する
     Artist.find_each do |artist|
-      artist_node = @neo.create_node(id: artist.id, name: artist.name) #ノードを登録
+      artist_node = @neo.create_node(name: artist.name) #ノードを登録
       @neo.add_label(artist_node, "Artist") #ラベルを登録
-      SimilarArtist.find_each do |similar|
-        similar_node = @neo.create_node(artist_id: similar.artist_id, name: similar.name, match: similar.match) #ノードを登録
-        @neo.add_label(similar_node, "Similar") #ラベルを登録
+      artist.similar_artists.each do |similar|
+        similar_node = first_or_create_node(similar.name)
         # artist_nodeからsimilar_node方向へsimilar関係を追加
         @neo.create_relationship(:similar, artist_node, similar_node)
       end
@@ -129,4 +128,16 @@ class ArtistsController < ApplicationController
       format.html { redirect_to artists_url, notice: '似ているアーティストを取得しました' }
     end
   end
+
+  private
+  def first_or_create_node(name)
+    similar_node = Neography::Node.find("index", "name", name)
+    if similar_node.blank?
+      similar_node = @neo.create_node(name: name)
+      @neo.add_label(similar_node, "Similar") #ラベルを登録
+      @neo.add_node_to_index("index", "name", name, similar_node)
+    end
+    similar_node
+  end
+
 end

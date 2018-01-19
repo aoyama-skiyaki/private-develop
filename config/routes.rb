@@ -2,8 +2,10 @@ ScaffoldSample::Application.routes.draw do
   resources :similar_artists
 
 
-  resources :artists
-
+  resources :artists do 
+    get 'similar', :action => 'similar' 
+  end
+  get 'output', :controller => 'artists', :action => 'output' 
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

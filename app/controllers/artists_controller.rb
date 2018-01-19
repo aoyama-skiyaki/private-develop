@@ -1,6 +1,7 @@
 class ArtistsController < ApplicationController
   require 'net/http'
   require 'json'
+  require 'neography'
 
 # GET /artists
   # GET /artists.json
@@ -49,7 +50,6 @@ class ArtistsController < ApplicationController
         name: name
       })
       @artist.save
-      get_similar
     end
     respond_to do |format|
       format.html { redirect_to @artist, notice: 'Artist was successfully created.' }
@@ -64,7 +64,6 @@ class ArtistsController < ApplicationController
 
     respond_to do |format|
       if @artist.update_attributes(params[:artist])
-        get_similar
         format.html { redirect_to @artist, notice: 'Artist was successfully updated.' }
         format.json { head :no_content }
       else
@@ -88,22 +87,46 @@ class ArtistsController < ApplicationController
     end
   end
 
-  private
+  def output
 
-  def get_similar
+    #neo4jに接続する
+    @neo = Neography::Rest.new({:authentication => 'basic', :username => "neo4j", :password => "neo4j"})
+
+    #ノードを作成する
+    Artist.find_each do |artist|
+      artist_node = @neo.create_node(id: artist.id, name: artist.name) #ノードを登録
+      @neo.add_label(artist_node, "Artist") #ラベルを登録
+      SimilarArtist.find_each do |similar|
+        similar_node = @neo.create_node(artist_id: similar.artist_id, name: similar.name, match: similar.match) #ノードを登録
+        @neo.add_label(similar_node, "Similar") #ラベルを登録
+        # artist_nodeからsimilar_node方向へsimilar関係を追加
+        @neo.create_relationship(:similar, artist_node, similar_node)
+      end
+    end
+
+    respond_to do |format|
+      format.html { redirect_to artists_url, notice: 'リレーションを出力しました' }
+    end
+  end
+
+  def similar
+    artist = Artist.find(params[:artist_id])
     # Net::HTTPでリクエストしてAPI叩く
-    res = Net::HTTP.get_response(URI.parse(@artist.api_url))
+    res = Net::HTTP.get_response(URI.parse(artist.api_url))
     similars = JSON.parse(res.body)
     unless similars["error"].present?
       similars["similarartists"]["artist"].each do |data| 
         next if data["match"].to_f < 0.3
         similar_artist = SimilarArtist.new({
-          artist_id: @artist.id,
+          artist_id: artist.id,
           name: data["name"],
           match: data["match"].to_f
         })
         similar_artist.save!
       end
+    end
+    respond_to do |format|
+      format.html { redirect_to artists_url, notice: '似ているアーティストを取得しました' }
     end
   end
 end

@@ -1,5 +1,5 @@
-<h1>Listing artists</h1>
-
+<h1>アーティスト一覧</h1>
+<p id="notice"><%= notice %></p>
 <table>
   <tr>
     <th>Name</th>
@@ -14,6 +14,7 @@
     <td><%= link_to 'Show', artist %></td>
     <td><%= link_to 'Edit', edit_artist_path(artist) %></td>
     <td><%= link_to 'Destroy', artist, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+    <td><%= link_to 'Get Similar Artist', artist_similar_path(artist) %></td>
   </tr>
 <% end %>
 </table>
@@ -21,3 +22,5 @@
 <br />
 
 <%= link_to 'New Artist', new_artist_path %>
+<br />
+<%= link_to 'Output Relation', output_path %>

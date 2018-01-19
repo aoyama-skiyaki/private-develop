@@ -10,6 +10,8 @@ gem 'sqlite3'
 group :development, :test do
   gem 'pry-rails'
   gem 'pry-doc'
+  gem 'neography'
+  gem 'neo4j-cypher'
 end
 # Gems used only for assets and not required
 # in production environments by default.

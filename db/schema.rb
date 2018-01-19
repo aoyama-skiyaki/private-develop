@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20180118065931) do
+ActiveRecord::Schema.define(:version => 20180119015408) do
 
   create_table "artists", :force => true do |t|
     t.string   "name"
@@ -22,7 +22,7 @@ ActiveRecord::Schema.define(:version => 20180118065931) do
   create_table "similar_artists", :force => true do |t|
     t.integer  "artist_id"
     t.string   "name"
-    t.integer  "match"
+    t.float    "match"
     t.datetime "created_at", :null => false
     t.datetime "updated_at", :null => false
   end

@@ -43,18 +43,17 @@ class ArtistsController < ApplicationController
   # POST /artists
   # POST /artists.json
   def create
-    @artist = Artist.new(params[:artist])
-
+    artist_names = params[:artist][:name].split('/')
+    artist_names.each do |name|
+      @artist = Artist.new({
+        name: name
+      })
+      @artist.save
+      get_similar
+    end
     respond_to do |format|
-      if @artist.save
-        get_similar
-        format.html { redirect_to @artist, notice: 'Artist was successfully created.' }
-        format.json { render json: @artist, status: :created, location: @artist }
-        #redirect_to controller: :similar_artists action: :create, similar: @similar
-      else
-        format.html { render action: "new" }
-        format.json { render json: @artist.errors, status: :unprocessable_entity }
-      end
+      format.html { redirect_to @artist, notice: 'Artist was successfully created.' }
+      format.json { render json: @artist, status: :created, location: @artist }
     end
   end
 
@@ -66,7 +65,8 @@ class ArtistsController < ApplicationController
     respond_to do |format|
       if @artist.update_attributes(params[:artist])
         get_similar
-        render similar_artists_path# " action: :create#, similar: @similar
+        format.html { redirect_to @artist, notice: 'Artist was successfully updated.' }
+        format.json { head :no_content }
       else
         format.html { render action: "edit" }
         format.json { render json: @artist.errors, status: :unprocessable_entity }
@@ -78,6 +78,8 @@ class ArtistsController < ApplicationController
   # DELETE /artists/1.json
   def destroy
     @artist = Artist.find(params[:id])
+    similar_artists = SimilarArtist.where(artist_id: params[:id])
+    similar_artists.destroy_all
     @artist.destroy
 
     respond_to do |format|
@@ -91,6 +93,17 @@ class ArtistsController < ApplicationController
   def get_similar
     # Net::HTTPでリクエストしてAPI叩く
     res = Net::HTTP.get_response(URI.parse(@artist.api_url))
-    @similar = JSON.parse(res.body)
+    similars = JSON.parse(res.body)
+    unless similars["error"].present?
+      similars["similarartists"]["artist"].each do |data| 
+        next if data["match"].to_f < 0.3
+        similar_artist = SimilarArtist.new({
+          artist_id: @artist.id,
+          name: data["name"],
+          match: data["match"].to_f
+        })
+        similar_artist.save!
+      end
+    end
   end
 end

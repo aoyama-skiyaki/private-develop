@@ -1,10 +1,14 @@
 <p id="notice"><%= notice %></p>
+<%= link_to 'Edit', edit_artist_path(@artist) %> |
+<%= link_to 'Back', artists_path %>
 
 <p>
   <b>Name:</b>
   <%= @artist.name %>
 </p>
-
-
-<%= link_to 'Edit', edit_artist_path(@artist) %> |
-<%= link_to 'Back', artists_path %>
+================================
+<% @artist.similar_artists.each do |similar| %>
+  <p>artist:<%= similar.name %></p>
+  <p>match:<%= similar.match %></p>
+  ================================
+<% end %>

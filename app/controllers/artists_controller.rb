@@ -87,27 +87,6 @@ class ArtistsController < ApplicationController
     end
   end
 
-  def output
-
-    #neo4jに接続する
-    @neo = Neography::Rest.new({:authentication => 'basic', :username => "neo4j", :password => "neo4j"})
-
-    #ノードを作成する
-    Artist.find_each do |artist|
-      artist_node = @neo.create_node(name: artist.name) #ノードを登録
-      @neo.add_label(artist_node, "Artist") #ラベルを登録
-      artist.similar_artists.each do |similar|
-        similar_node = first_or_create_node(similar.name)
-        # artist_nodeからsimilar_node方向へsimilar関係を追加
-        @neo.create_relationship(:similar, artist_node, similar_node)
-      end
-    end
-
-    respond_to do |format|
-      format.html { redirect_to artists_url, notice: 'リレーションを出力しました' }
-    end
-  end
-
   def similar
     artist = Artist.find(params[:artist_id])
     # Net::HTTPでリクエストしてAPI叩く
@@ -125,7 +104,25 @@ class ArtistsController < ApplicationController
       end
     end
     respond_to do |format|
-      format.html { redirect_to artists_url, notice: '似ているアーティストを取得しました' }
+      format.html { redirect_to artists_url, notice: 'Similar_Artistを取得しました' }
+    end
+  end
+
+  def output
+    #neo4jに接続する
+    @neo = Neography::Rest.new({:authentication => 'basic', :username => "neo4j", :password => "neo4j"})
+    #ノードを作成する
+    Artist.find_each do |artist|
+      artist_node = @neo.create_node(name: artist.name) #ノードを登録
+      @neo.add_label(artist_node, "Artist") #ラベルを登録
+      artist.similar_artists.each do |similar|
+        similar_node = first_or_create_node(similar.name)
+        # artist_nodeからsimilar_node方向へsimilar関係を追加
+        @neo.create_relationship(:similar, artist_node, similar_node)
+      end
+    end
+    respond_to do |format|
+      format.html { redirect_to artists_url, notice: 'リレーションを出力しました' }
     end
   end
 
